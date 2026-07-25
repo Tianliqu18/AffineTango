@@ -17,7 +17,7 @@ export async function readBoard() {
     givens: new Int8Array(NV).fill(UNKNOWN),
     clues: [],
     writeCell(index, value) {
-      console.warn(`[tango-lens] stub adapter: writeCell(${index}, ${value}) is a no-op`);
+      console.warn(`[affine-tango] stub adapter: writeCell(${index}, ${value}) is a no-op`);
     },
   };
 }

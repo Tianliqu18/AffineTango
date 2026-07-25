@@ -1,4 +1,4 @@
-# tango-lens
+# affine-tango
 
 Solving LinkedIn's Tango puzzle with linear algebra over F₂, plus a Chrome extension
 that animates the whole thing so you can watch cells get determined by constraints

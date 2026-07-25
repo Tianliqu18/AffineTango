@@ -6,7 +6,7 @@
 
 import { SUN } from '../core/encode.js';
 
-const OVERLAY_ID = 'tango-lens-overlay';
+const OVERLAY_ID = 'affine-tango-overlay';
 
 export function clearOverlay(boardEl) {
   boardEl.querySelector(`#${OVERLAY_ID}`)?.remove();

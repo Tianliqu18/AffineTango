@@ -21,7 +21,7 @@ async function main() {
   const solved = solve(grid, board.clues, { limit: 2 });
 
   if (!solved.consistent || solved.solutions.length !== 1) {
-    console.warn('[tango-lens] not uniquely solvable from current read:',
+    console.warn('[affine-tango] not uniquely solvable from current read:',
                  { consistent: solved.consistent, solutions: solved.solutions.length });
     return;
   }
@@ -38,7 +38,7 @@ async function main() {
   }
   renderOverlay(boardEl, marks);
 
-  console.log(`[tango-lens] solved, ${marks.length} cells overlaid`);
+  console.log(`[affine-tango] solved, ${marks.length} cells overlaid`);
 }
 
 main();
