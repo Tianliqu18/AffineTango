@@ -14,7 +14,7 @@ The repo is now ready to be loaded as an unpacked chrome extension:
 1. go to chrome://extensions
 2. toggle Developer mode (top right)
 3. Load unpacked → select the extension/ folder
-
+### Solving methodology checker
 ```
 python3 test/gen_cases.py && node test/crossvalidate.js   # 1685 cases vs the reference
 node tools/build-harness.js                               # regenerate harness.html
@@ -24,7 +24,7 @@ open harness.html                                         # watch it run
 The harness is self-contained on purpose (no server, no bundler), so the build step
 inlines `src/core/*.js` into it. `src/core/` stays the only source of truth.
 
-## the idea
+## the idea/motivation
 
 I was bummed out my senior spring semester since I could not fit Dylan Thurston's game elective class into my schedule.
 In the same semester, I was introduced to Linkedin games, which I got instantly hooked on. 
