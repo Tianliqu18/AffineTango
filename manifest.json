@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Tango Lens",
+  "version": "0.1.0",
+  "description": "Solves LinkedIn's Tango puzzle live and animates the derivation.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/games/tango*",
+        "https://8tango.com/*",
+        "https://www.8tango.com/*"
+      ],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

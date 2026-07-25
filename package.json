@@ -1,0 +1,13 @@
+{
+  "name": "tango-lens",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build:extension": "esbuild src/extension/content.js --bundle --format=iife --outfile=dist/content.js",
+    "watch:extension": "esbuild src/extension/content.js --bundle --format=iife --outfile=dist/content.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

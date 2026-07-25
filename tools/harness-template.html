@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tango Lens / elimination harness</title>
+<style>
+:root{
+  --card:#DDD8C6;
+  --card-edge:#C3BDA8;
+  --ground:#ADA894;
+  --ink:#191D1A;
+  --ink-soft:#5A5F55;
+  --ink-faint:#8A8F82;
+  --hole:#262E28;
+  --pivot:#8C2F26;
+  --pin:#1D5A4E;
+  --guess:#A8730F;
+  --sun:#E4C77C;
+  --moon:#2E3A33;
+
+  --blk-row:#3C6E8F;
+  --blk-col:#5B7C6B;
+  --blk-clue:#8C6239;
+  --blk-given:#6B4C7A;
+
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Helvetica,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.5;
+  padding:24px 20px 40px;
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.035) 0 1px,transparent 1px 4px);
+}
+.wrap{max-width:1180px;margin:0 auto}
+
+header{margin-bottom:20px}
+h1{
+  font-family:var(--mono);
+  font-size:15px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.34em;
+  margin:0 0 6px;
+}
+.sub{color:var(--ink-soft);font-size:13px;margin:0;max-width:62ch}
+
+.bar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  margin:16px 0 18px;
+}
+select,button{
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;
+  background:var(--card);color:var(--ink);
+  border:1px solid var(--card-edge);border-bottom-width:2px;
+  padding:7px 11px;cursor:pointer;border-radius:2px;
+}
+button:hover,select:hover{background:#E6E2D2}
+button:active{border-bottom-width:1px;transform:translateY(1px)}
+button[disabled]{opacity:.4;cursor:default;transform:none}
+:focus-visible{outline:2px solid var(--pivot);outline-offset:2px}
+
+.panels{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+@media (max-width:900px){.panels{grid-template-columns:1fr}}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--card-edge);
+  border-radius:2px;
+  padding:18px;
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 2px 6px rgba(0,0,0,.10);
+}
+.card h2{
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.22em;color:var(--ink-soft);
+  margin:0 0 14px;
+}
+
+/* ---- board ---- */
+#board{
+  display:grid;
+  grid-template-columns:repeat(6,46px);
+  grid-template-rows:repeat(6,46px);
+  gap:16px;
+  /* explicit width + auto margins so the container's left edge sits exactly on
+     the first track, which is what the absolutely placed clue markers measure from */
+  width:356px;
+  margin:0 auto;
+  position:relative;
+}
+.cell{
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  border:2px solid transparent;
+  background:rgba(0,0,0,.05);
+  color:var(--ink-faint);
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.cell.sun{background:var(--sun);color:#6B5416}
+.cell.moon{background:var(--moon);color:#A9B5A9}
+.cell.given{border-color:var(--ink)}
+.cell.pinned{border-color:var(--pin)}
+.cell.guessed{border-color:var(--guess);border-style:dashed}
+.cell.flash{animation:pop .5s ease}
+@keyframes pop{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(29,90,78,.55)}
+  40%{transform:scale(1.14);box-shadow:0 0 0 9px rgba(29,90,78,0)}
+  100%{transform:scale(1)}
+}
+.cell.rejected{animation:shake .3s ease}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}
+}
+.mark{
+  position:absolute;
+  font-family:var(--mono);font-size:12px;font-weight:700;
+  color:var(--ink-soft);
+  width:16px;height:16px;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+
+/* ---- readout ---- */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--card-edge);margin-top:18px;border:1px solid var(--card-edge)}
+.stat{background:var(--card);padding:9px 11px}
+.stat .k{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--ink-faint)}
+.stat .v{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1.15}
+.stat.wide{grid-column:1/-1}
+.stat .v small{font-size:11px;font-weight:400;color:var(--ink-soft);letter-spacing:0}
+
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.legend span{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft);display:flex;align-items:center;gap:5px}
+.swatch{width:9px;height:9px;border-radius:1px;display:inline-block}
+
+/* ---- the punch card ---- */
+.cardstock{
+  position:relative;
+  background:var(--card);
+  border:1px solid var(--card-edge);
+  padding:16px 16px 14px 16px;
+  border-radius:2px;
+  overflow-x:auto;
+  /* clipped top-right corner, the way Hollerith cards were cut for orientation */
+  clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+#matrix{display:inline-block;min-width:100%}
+.mrow{display:flex;align-items:center;gap:0;height:13px}
+.mrow.hidden{visibility:hidden}
+.tab{width:4px;height:11px;margin-right:6px;border-radius:1px;flex:none}
+.rid{
+  width:22px;flex:none;text-align:right;padding-right:7px;
+  font-family:var(--mono);font-size:8px;color:var(--ink-faint);
+}
+.bit{
+  width:12px;height:11px;flex:none;
+  border-right:1px solid rgba(0,0,0,.05);
+  position:relative;
+}
+.bit::after{
+  content:"";position:absolute;inset:3px 3px;
+  border-radius:1px;background:rgba(0,0,0,.07);
+}
+.bit.on::after{background:var(--hole);inset:2px 2px}
+.bit.gutter{margin-left:9px;border-left:1px solid var(--card-edge)}
+.bit.rhs::after{border-radius:50%}
+.bit.pivcol::before{content:"";position:absolute;inset:0;background:rgba(140,47,38,.10)}
+.mrow.pivrow .bit::before{content:"";position:absolute;inset:0;background:rgba(140,47,38,.08)}
+.bit.piv::after{background:var(--pivot);inset:1px 1px;box-shadow:0 0 0 2px rgba(140,47,38,.3)}
+.mrow.xsource .bit.on::after{background:var(--pivot)}
+.mrow.xtarget{animation:sweep .22s ease}
+@keyframes sweep{0%{background:rgba(140,47,38,.22)}100%{background:transparent}}
+.mrow.cited{background:rgba(140,47,38,.14)}
+.mrow.cited .bit.on::after{background:var(--pivot)}
+.mrow.conflict{background:rgba(140,47,38,.3)}
+.mrow.pinrow .bit.on::after{background:var(--pin)}
+
+.cardfoot{
+  display:flex;justify-content:space-between;gap:12px;
+  font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--ink-faint);margin-top:10px;
+}
+
+/* ---- transport ---- */
+.transport{margin-top:20px}
+.scrub{width:100%;margin:10px 0 4px;accent-color:var(--pivot);height:22px}
+.phasebar{height:5px;border-radius:2px;border:1px solid var(--card-edge)}
+.phaselabels{display:flex;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-faint);margin-top:5px}
+.narrate{
+  font-family:var(--mono);font-size:12px;
+  background:var(--card);border:1px solid var(--card-edge);border-left:3px solid var(--ink-soft);
+  padding:10px 12px;margin-top:12px;min-height:40px;
+  display:flex;align-items:center;gap:10px;
+}
+.narrate .tag{
+  font-size:9px;text-transform:uppercase;letter-spacing:.14em;
+  padding:2px 6px;border-radius:2px;background:rgba(0,0,0,.07);color:var(--ink-soft);flex:none;
+}
+.narrate.pin{border-left-color:var(--pin)}
+.narrate.pivot{border-left-color:var(--pivot)}
+.narrate.search{border-left-color:var(--guess)}
+.narrate.bad{border-left-color:var(--pivot);background:rgba(140,47,38,.10)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Tango Lens</h1>
+  <p class="sub">Watching a 6&times;6 board fall out of a linear system over F<sub>2</sub>. The card on the right is the augmented matrix [A | b]. Punched holes are ones. Phase one eliminates; phase two searches whatever it could not reach.</p>
+</header>
+
+<div class="bar">
+  <select id="puzzle"></select>
+  <button id="playBtn">Play</button>
+  <button id="stepBack">&larr; Step</button>
+  <button id="stepFwd">Step &rarr;</button>
+  <button id="toSearch">Skip to phase 2</button>
+  <button id="reset">Restart</button>
+  <select id="speed">
+    <option value="120">Slow</option>
+    <option value="45" selected>Normal</option>
+    <option value="14">Fast</option>
+    <option value="3">Blur</option>
+  </select>
+</div>
+
+<div class="panels">
+  <div>
+    <div class="card">
+      <h2>Board</h2>
+      <div id="board"></div>
+      <div class="stats">
+        <div class="stat"><div class="k">Rank of A</div><div class="v" id="sRank">&mdash;</div></div>
+        <div class="stat"><div class="k">Free dim</div><div class="v" id="sFree">&mdash;</div></div>
+        <div class="stat"><div class="k">Pinned by phase 1</div><div class="v" id="sPin">0<small> / 36</small></div></div>
+        <div class="stat"><div class="k">Phase 2 guesses</div><div class="v" id="sGuess">0</div></div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--ink)"></i>given</span>
+        <span><i class="swatch" style="background:var(--pin)"></i>pinned</span>
+        <span><i class="swatch" style="background:var(--guess)"></i>guessed</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="cardstock">
+      <div id="matrix"></div>
+      <div class="cardfoot">
+        <span id="blockLegend"></span>
+        <span>cols 1&ndash;36 = cells &nbsp;&middot;&nbsp; last col = b</span>
+      </div>
+    </div>
+
+    <div class="transport">
+      <div class="phasebar" id="phasebar"></div>
+      <input class="scrub" id="scrub" type="range" min="0" max="0" value="0" aria-label="Trace position">
+      <div class="phaselabels">
+        <span id="evPos">0 / 0</span>
+      </div>
+      <div class="narrate" id="narrate"><span class="tag">idle</span><span id="narrateText">Pick a puzzle and press play.</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ==== solver core, inlined from src/core by tools/build-harness.js ==== */
+/*__SOLVER__*/
+
+/* ==== demo puzzles ==== */
+const PUZZLES = /*__PUZZLES__*/;
+
+/* ==== animator ==== */
+const BLOCK_COLOR = {
+  row_parity:'var(--blk-row)', col_parity:'var(--blk-col)',
+  clue:'var(--blk-clue)', given:'var(--blk-given)',
+};
+const BLOCK_LABEL = {
+  row_parity:'row parity', col_parity:'col parity', clue:'clue', given:'given',
+};
+const CELLNAME = (i) => `r${Math.floor(i/6)+1}c${(i%6)+1}`;
+const VALNAME = (v) => (v === 1 ? 'moon' : 'sun');
+const REJECT_TEXT = {
+  row_count:'too many of one symbol in that row',
+  col_count:'too many of one symbol in that column',
+  triple_row:'three in a row horizontally',
+  triple_col:'three in a row vertically',
+  clue_eq:'breaks an = clue',
+  clue_x:'breaks an \u00d7 clue',
+};
+
+let current = null;   // {puzzle, events, maxRows, boardEls, markEls, rowEls, bitEls}
+let cursor = 0;
+let playing = false;
+let timer = null;
+let lastClass = [];
+
+/* ---------- build DOM once per puzzle ---------- */
+function mountBoard(puzzle) {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const cells = [];
+  for (let i = 0; i < 36; i++) {
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.setAttribute('role','img');
+    board.appendChild(d);
+    cells.push(d);
+  }
+  // clue markers, absolutely placed over the gaps
+  const marks = [];
+  const step = 46 + 16;
+  for (const cl of puzzle.clues) {
+    const m = document.createElement('div');
+    m.className = 'mark';
+    m.textContent = cl.type === 'x' ? '\u00d7' : '=';
+    const horizontal = cl.r1 === cl.r2;
+    const left = horizontal ? (Math.min(cl.c1,cl.c2) * step + 46 + 8 - 8) : (cl.c1 * step + 23 - 8);
+    const top  = horizontal ? (cl.r1 * step + 23 - 8) : (Math.min(cl.r1,cl.r2) * step + 46 + 8 - 8);
+    m.style.left = left + 'px';
+    m.style.top = top + 'px';
+    board.appendChild(m);
+    marks.push(m);
+  }
+  return cells;
+}
+
+function mountMatrix(maxRows, rowMeta) {
+  const host = document.getElementById('matrix');
+  host.innerHTML = '';
+  const rowEls = [], bitEls = [];
+  for (let r = 0; r < maxRows; r++) {
+    const row = document.createElement('div');
+    row.className = 'mrow hidden';
+    const tab = document.createElement('i');
+    tab.className = 'tab';
+    row.appendChild(tab);
+    const rid = document.createElement('span');
+    rid.className = 'rid';
+    rid.textContent = r;
+    row.appendChild(rid);
+    const bits = [];
+    for (let c = 0; c < 37; c++) {
+      const b = document.createElement('i');
+      b.className = 'bit';
+      row.appendChild(b);
+      bits.push(b);
+    }
+    host.appendChild(row);
+    rowEls.push({ row, tab });
+    bitEls.push(bits);
+  }
+  const legend = Object.entries(BLOCK_LABEL)
+    .map(([k,v]) => `<i class="swatch" style="background:${BLOCK_COLOR[k]};margin-right:4px"></i>${v}`)
+    .join('&nbsp;&nbsp;');
+  document.getElementById('blockLegend').innerHTML = legend;
+  return { rowEls, bitEls };
+}
+
+/* ---------- replay the trace up to an index ---------- */
+function stateAt(events, k, puzzle) {
+  const rows = [];
+  const board = new Int8Array(36).fill(-1);
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) board[r*6+c] = puzzle.givens[r][c];
+  const givenSet = new Set();
+  for (let i = 0; i < 36; i++) if (board[i] !== -1) givenSet.add(i);
+
+  const pins = {};
+  let rank = null, freeDim = null, phase = 'assemble', pivot = null;
+  let contradiction = null, solved = false, guessCount = 0;
+  let tr = {};   // transient, reflects only the event at k
+
+  for (let i = 0; i <= k && i < events.length; i++) {
+    const e = events[i];
+    tr = {};
+    switch (e.type) {
+      case 'phase': phase = e.phase; break;
+      case 'row_added': {
+        const v = new Uint8Array(37);
+        for (let j = 0; j < 36; j++) v[j] = e.bits[j];
+        v[36] = e.rhs;
+        rows.push({ v, block: e.block, meta: e.meta, id: e.row });
+        tr.added = rows.length - 1;
+        break;
+      }
+      case 'row_swap': {
+        const t = rows[e.a]; rows[e.a] = rows[e.b]; rows[e.b] = t;
+        tr.swap = e;
+        break;
+      }
+      case 'pivot_chosen': pivot = { row: e.row, col: e.col }; break;
+      case 'row_xor': {
+        const t = rows[e.target].v, s = rows[e.source].v;
+        for (let j = 0; j < 37; j++) t[j] ^= s[j];
+        tr.xor = e;
+        break;
+      }
+      case 'cell_pinned':
+        pins[e.cell] = e.value;
+        board[e.cell] = e.value;
+        tr.pin = e;
+        break;
+      case 'rank_update': rank = e.rank; freeDim = e.freeDim; break;
+      case 'contradiction': contradiction = e; tr.conflict = e; break;
+      case 'guess':
+        board[e.cell] = e.value; guessCount++; tr.guess = e; break;
+      case 'reject':
+        board[e.cell] = -1; tr.reject = e; break;
+      case 'backtrack':
+        board[e.cell] = -1; tr.back = e; break;
+      case 'solution': {
+        for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) board[r*6+c] = e.board[r][c];
+        solved = true; tr.solved = true; break;
+      }
+      default: break;
+    }
+  }
+  return { rows, board, givenSet, pins, rank, freeDim, phase, pivot,
+           contradiction, solved, guessCount, tr, event: events[Math.min(k, events.length-1)] };
+}
+
+/* ---------- narration ---------- */
+function narrate(st) {
+  const e = st.event;
+  if (!e) return ['idle','', ''];
+  switch (e.type) {
+    case 'phase':
+      return ['phase','',
+        e.phase === 'assemble' ? 'Assembling [A | b] from the rules.'
+        : e.phase === 'eliminate' ? 'Reducing to row echelon form over F\u2082.'
+        : 'Linear phase exhausted. Searching what is left.'];
+    case 'row_added': {
+      const m = e.meta || {};
+      let what = BLOCK_LABEL[e.block];
+      if (e.block === 'row_parity') what = `row ${m.line+1} XORs to 1 (three moons is odd)`;
+      if (e.block === 'col_parity') what = `column ${m.line+1} XORs to 1`;
+      if (e.block === 'clue') what = `clue ${CELLNAME(m.a)} ${m.type === 'x' ? '\u00d7' : '='} ${CELLNAME(m.b)}`;
+      if (e.block === 'given') what = `given ${CELLNAME(m.cell)}`;
+      return ['load','', `Row ${e.row}: ${what}`];
+    }
+    case 'row_swap': return ['swap','', `Swap rows ${e.a} and ${e.b} to bring a pivot up.`];
+    case 'pivot_chosen': return ['pivot','pivot', `Pivot at row ${e.row}, column ${e.col} (${CELLNAME(e.col)}).`];
+    case 'row_xor': return ['xor','pivot', `Row ${e.target} ^= row ${e.source}`];
+    case 'cell_pinned':
+      return ['pinned','pin',
+        `${CELLNAME(e.cell)} is forced to ${VALNAME(e.value)}, by ${e.derivedFrom.length} equation${e.derivedFrom.length===1?'':'s'} combined (highlighted).`];
+    case 'rank_update':
+      return ['result','pin', `rank ${e.rank}, so ${e.freeDim} degrees of freedom remain. ${e.pinnedCount} cells pinned without any search.`];
+    case 'contradiction':
+      return ['conflict','bad', `Row ${e.row} reduces to 0 = 1. Rows ${e.derivedFrom.join(', ')} cannot all hold. Puzzle is inconsistent.`];
+    case 'guess': return ['try','search', `Try ${VALNAME(e.value)} at ${CELLNAME(e.cell)}.`];
+    case 'reject': return ['reject','search', `Rejected: ${REJECT_TEXT[e.reason] || e.reason}.`];
+    case 'backtrack': return ['back','search', `Both values fail at ${CELLNAME(e.cell)}. Back up.`];
+    case 'solution': return ['solved','pin', 'Solved.'];
+    case 'done':
+      return ['done', e.consistent ? 'pin' : 'bad',
+        e.consistent ? `Finished. rank ${e.rank}, free dim ${e.freeDim}, ${e.solutionCount} solution(s).`
+                     : 'Finished. No solution exists.'];
+    default: return ['','',''];
+  }
+}
+
+/* ---------- render ---------- */
+function render() {
+  const st = stateAt(current.events, cursor, current.puzzle);
+  const { rowEls, bitEls } = current.matrix;
+
+  // board
+  for (let i = 0; i < 36; i++) {
+    const el = current.cells[i];
+    const v = st.board[i];
+    let cls = 'cell';
+    if (v === 0) cls += ' sun';
+    else if (v === 1) cls += ' moon';
+    if (st.givenSet.has(i)) cls += ' given';
+    else if (st.pins[i] !== undefined) cls += ' pinned';
+    else if (v !== -1) cls += ' guessed';
+    if (st.tr.pin && st.tr.pin.cell === i) cls += ' flash';
+    if (st.tr.reject && st.tr.reject.cell === i) cls += ' rejected';
+    if (el.className !== cls) el.className = cls;
+    el.textContent = v === -1 ? '' : (v === 1 ? 'M' : 'S');
+    el.setAttribute('aria-label', `${CELLNAME(i)} ${v === -1 ? 'empty' : VALNAME(v)}`);
+  }
+
+  // matrix
+  const cited = new Set(st.tr.pin ? st.tr.pin.derivedFrom : (st.tr.conflict ? st.tr.conflict.derivedFrom : []));
+  for (let r = 0; r < rowEls.length; r++) {
+    const { row, tab } = rowEls[r];
+    if (r >= st.rows.length) {
+      if (!row.classList.contains('hidden')) row.className = 'mrow hidden';
+      continue;
+    }
+    const data = st.rows[r];
+    let rcls = 'mrow';
+    if (st.pivot && st.pivot.row === r) rcls += ' pivrow';
+    if (st.tr.xor && st.tr.xor.target === r) rcls += ' xtarget';
+    if (st.tr.xor && st.tr.xor.source === r) rcls += ' xsource';
+    if (cited.has(data.id)) rcls += ' cited';
+    if (st.tr.conflict && st.tr.conflict.row === r) rcls += ' conflict';
+    if (row.className !== rcls) row.className = rcls;
+    const col = BLOCK_COLOR[data.block];
+    if (tab.style.background !== col) tab.style.background = col;
+
+    const bits = bitEls[r];
+    for (let c = 0; c < 37; c++) {
+      let bcls = 'bit';
+      if (data.v[c]) bcls += ' on';
+      if (c === 36) bcls += ' gutter rhs';
+      if (st.pivot && st.pivot.col === c) bcls += ' pivcol';
+      if (st.pivot && st.pivot.col === c && st.pivot.row === r) bcls += ' piv';
+      const key = r * 37 + c;
+      if (lastClass[key] !== bcls) { bits[c].className = bcls; lastClass[key] = bcls; }
+    }
+  }
+
+  // readout
+  document.getElementById('sRank').textContent = st.rank === null ? '\u2014' : st.rank;
+  document.getElementById('sFree').textContent = st.freeDim === null ? '\u2014' : st.freeDim;
+  document.getElementById('sPin').innerHTML = Object.keys(st.pins).length + '<small> / 36</small>';
+  document.getElementById('sGuess').textContent = st.guessCount;
+
+  const [tag, mood, text] = narrate(st);
+  const n = document.getElementById('narrate');
+  n.className = 'narrate' + (mood ? ' ' + mood : '');
+  n.querySelector('.tag').textContent = tag || '\u00b7';
+  document.getElementById('narrateText').textContent = text;
+
+  document.getElementById('scrub').value = cursor;
+  document.getElementById('evPos').textContent = `event ${cursor + 1} / ${current.events.length}`;
+}
+
+/* ---------- transport ---------- */
+function stop() {
+  playing = false;
+  clearInterval(timer);
+  document.getElementById('playBtn').textContent = 'Play';
+}
+function play() {
+  if (cursor >= current.events.length - 1) cursor = 0;
+  playing = true;
+  document.getElementById('playBtn').textContent = 'Pause';
+  clearInterval(timer);
+  timer = setInterval(() => {
+    if (cursor >= current.events.length - 1) { stop(); render(); return; }
+    cursor++;
+    render();
+  }, Number(document.getElementById('speed').value));
+}
+
+function loadPuzzle(idx) {
+  stop();
+  const puzzle = PUZZLES[idx];
+  const res = solve(puzzle.givens, puzzle.clues, { limit: 1, trace: true });
+  const events = res.trace.events;
+  const maxRows = events.filter(e => e.type === 'row_added').length;
+
+  current = {
+    puzzle,
+    events,
+    cells: mountBoard(puzzle),
+    matrix: mountMatrix(maxRows),
+  };
+  lastClass = [];
+  cursor = 0;
+
+  const scrub = document.getElementById('scrub');
+  scrub.max = events.length - 1;
+  scrub.value = 0;
+
+  // phase boundaries drawn under the scrubber, so you can see the shape of the run
+  const bounds = [];
+  events.forEach((e, i) => { if (e.type === 'phase') bounds.push([i, e.phase]); });
+  const total = events.length;
+  const colors = { assemble:'var(--blk-clue)', eliminate:'var(--pivot)', search:'var(--guess)' };
+  let stopsCss = [];
+  for (let i = 0; i < bounds.length; i++) {
+    const start = (bounds[i][0] / total) * 100;
+    const end = (i + 1 < bounds.length ? bounds[i+1][0] / total : 1) * 100;
+    stopsCss.push(`${colors[bounds[i][1]]} ${start}% ${end}%`);
+  }
+  document.getElementById('phasebar').style.background =
+    stopsCss.length ? `linear-gradient(90deg,${stopsCss.join(',')})` : 'var(--card)';
+
+  render();
+}
+
+/* ---------- wiring ---------- */
+const sel = document.getElementById('puzzle');
+PUZZLES.forEach((p, i) => {
+  const o = document.createElement('option');
+  o.value = i;
+  o.textContent = `${p.name} \u00b7 ${p.clues.length} clues`;
+  sel.appendChild(o);
+});
+sel.addEventListener('change', () => loadPuzzle(Number(sel.value)));
+document.getElementById('playBtn').addEventListener('click', () => playing ? stop() : play());
+document.getElementById('stepFwd').addEventListener('click', () => {
+  stop(); if (cursor < current.events.length - 1) { cursor++; render(); }
+});
+document.getElementById('stepBack').addEventListener('click', () => {
+  stop(); if (cursor > 0) { cursor--; render(); }
+});
+document.getElementById('reset').addEventListener('click', () => { stop(); cursor = 0; render(); });
+document.getElementById('toSearch').addEventListener('click', () => {
+  stop();
+  const i = current.events.findIndex(e => e.type === 'phase' && e.phase === 'search');
+  cursor = i === -1 ? current.events.length - 1 : i;
+  render();
+});
+document.getElementById('scrub').addEventListener('input', (ev) => {
+  stop(); cursor = Number(ev.target.value); render();
+});
+document.getElementById('speed').addEventListener('change', () => { if (playing) play(); });
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === ' ') { ev.preventDefault(); playing ? stop() : play(); }
+  if (ev.key === 'ArrowRight') { stop(); if (cursor < current.events.length-1) { cursor++; render(); } }
+  if (ev.key === 'ArrowLeft') { stop(); if (cursor > 0) { cursor--; render(); } }
+});
+
+loadPuzzle(0);
+</script>
+</body>
+</html>
