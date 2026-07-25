@@ -9,11 +9,22 @@ implementation used only for cross-validation (`test/reference_solver.py`), and 
 standalone harness page that animates the whole elimination. The extension itself is
 next.~~
 
-The repo is now ready to be loaded as an unpacked chrome extension:
 ### load as unpacked extension
+
+Easiest: grab the prebuilt zip from [the latest release](https://github.com/Tianliqu18/AffineTango/releases/tag/latest)
+(rebuilt automatically on every push to main), unzip it, then:
 1. go to chrome://extensions
 2. toggle Developer mode (top right)
-3. Load unpacked → select the extension/ folder
+3. Load unpacked → select the unzipped folder
+
+Building from source instead (needed if you're editing the code):
+```
+npm install
+npm run build:extension   # writes dist/content.js, dist/background.js, etc.
+```
+then Load unpacked → select the repo root. `dist/` is gitignored, so this build step is
+required after every fresh clone -- a stale or missing `dist/` is why "Load unpacked"
+fails with errors like `Could not load javascript 'dist/8tango-bridge.js'`.
 ### Solving methodology checker
 ```
 python3 test/gen_cases.py && node test/crossvalidate.js   # 1685 cases vs the reference

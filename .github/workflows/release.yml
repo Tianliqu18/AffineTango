@@ -1,0 +1,37 @@
+name: Build and publish extension zip
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+      - run: npm run build:extension
+
+      # Chrome's "Load unpacked" needs manifest.json plus everything it (and
+      # popup.html) reference at the same relative paths: dist/ for the built
+      # bundles, src/extension/{popup.html,popup.js} unbundled.
+      - name: Package unpacked extension
+        run: zip -r affine-tango-extension.zip manifest.json dist src/extension/popup.html src/extension/popup.js
+
+      - name: Publish rolling "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          body: Auto-built from the latest commit on main (${{ github.sha }}). Download, unzip, and "Load unpacked" in chrome://extensions.
+          make_latest: true
+          files: affine-tango-extension.zip
