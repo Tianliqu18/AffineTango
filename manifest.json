@@ -6,6 +6,15 @@
   "content_scripts": [
     {
       "matches": [
+        "https://8tango.com/*",
+        "https://www.8tango.com/*"
+      ],
+      "js": ["dist/8tango-bridge.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
         "https://www.linkedin.com/games/tango*",
         "https://8tango.com/*",
         "https://www.8tango.com/*"
