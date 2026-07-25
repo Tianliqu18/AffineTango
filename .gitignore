@@ -3,3 +3,5 @@ test/cases.json
 __pycache__/
 *.pyc
 dist/
+CLAUDE.md
+.DS_Store
