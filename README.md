@@ -4,10 +4,16 @@ Solving LinkedIn's Tango puzzle with linear algebra over F₂, plus a Chrome ext
 that animates the whole thing so you can watch cells get determined by constraints
 that never touched them.
 
-What's here so far: the solver core in JS (`src/core/`), a Python reference
+~~What's here so far: the solver core in JS (`src/core/`), a Python reference
 implementation used only for cross-validation (`test/reference_solver.py`), and a
 standalone harness page that animates the whole elimination. The extension itself is
-next.
+next.~~
+
+The repo is now ready to be loaded as an unpacked chrome extension:
+## load as unpacked extension
+1. go to chrome://extensions
+2. toggle Developer mode (top right)
+3. Load unpacked → select the extension/ folder
 
 ```
 python3 test/gen_cases.py && node test/crossvalidate.js   # 1685 cases vs the reference
