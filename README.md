@@ -10,7 +10,7 @@ standalone harness page that animates the whole elimination. The extension itsel
 next.~~
 
 The repo is now ready to be loaded as an unpacked chrome extension:
-## load as unpacked extension
+### load as unpacked extension
 1. go to chrome://extensions
 2. toggle Developer mode (top right)
 3. Load unpacked → select the extension/ folder
