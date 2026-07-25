@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build:extension": "esbuild src/extension/content.js --bundle --format=iife --outfile=dist/content.js && esbuild src/adapters/8tango-bridge.js --bundle --format=iife --outfile=dist/8tango-bridge.js",
+    "build:extension": "esbuild src/extension/content.js --bundle --format=iife --outfile=dist/content.js && esbuild src/adapters/8tango-bridge.js --bundle --format=iife --outfile=dist/8tango-bridge.js && node tools/build-live-harness.js",
     "watch:extension": "esbuild src/extension/content.js --bundle --format=iife --outfile=dist/content.js --watch & esbuild src/adapters/8tango-bridge.js --bundle --format=iife --outfile=dist/8tango-bridge.js --watch"
   },
   "devDependencies": {

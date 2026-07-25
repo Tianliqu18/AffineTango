@@ -164,8 +164,9 @@ bothered with, not a research contribution.
 
 - [x] port solver to JS with trace events (`row_xor`, `cell_pinned`, `guess`, `backtrack`, ...)
 - [x] local harness page + animation, decoupled from the extension
-- [ ] board adapters for linkedin.com/games/tango and 8tango.com
-- [ ] read-only overlay, autofill behind a toggle
+- [x] board adapters for linkedin.com/games/tango and 8tango.com (LinkedIn's
+      write path still needs verifying against a fresh, non-completed puzzle)
+- [x] read-only overlay, autofill behind an explicit button
 - [ ] extract an explicit basis for ker(A) and enumerate free directions instead of backtracking over cells
 - [ ] try interleaving the phases (fold no-triples back in as implications) and see if the CryptoMiniSat cost lesson reproduces at this scale
 - [ ] generalize the 5×5 border construction to n×n

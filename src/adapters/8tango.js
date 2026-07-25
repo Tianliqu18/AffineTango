@@ -60,8 +60,12 @@ async function waitForBoard() {
   }
 }
 
-function cellElement(x, y) {
+function cellElementAt(x, y) {
   return document.querySelector(`.game-board .cell[data-x="${x}"][data-y="${y}"]`);
+}
+
+function cellElement(index) {
+  return cellElementAt(colOf(index), rowOf(index));
 }
 
 // The current value lives on the DOM class rather than window.game, since
@@ -92,10 +96,14 @@ export async function readBoard() {
   return {
     givens,
     clues,
+    boardEl: document.querySelector('.game-board'),
+    cellElement,
+    isFilled(index) {
+      const cell = cellElement(index);
+      return !!cell && (cell.classList.contains('sun') || cell.classList.contains('moon'));
+    },
     writeCell(index, value) {
-      const y = rowOf(index);
-      const x = colOf(index);
-      const cell = cellElement(x, y);
+      const cell = cellElement(index);
       if (!cell) return;
       const current = cellSpaceValue(cell);
       const target = value === SUN ? 1 : 2;
