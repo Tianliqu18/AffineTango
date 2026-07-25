@@ -20,19 +20,21 @@ inlines `src/core/*.js` into it. `src/core/` stays the only source of truth.
 
 ## the idea
 
+I was bummed out my senior spring semester since I could not fit Dylan Thurston's game elective class into my schedule.
+In the same semester, I was introduced to Linkedin games, which I got instantly hooked on. 
+This gave me inspiration for finding a formal mathematical connection between tango and linear algebra.
+
 Encode sun = 0 and moon = 1. Now a board is just a vector in F₂³⁶ (36 cells, each a
 bit) and F₂ is the field where 1 + 1 = 0, so addition is XOR. 
 Three of Tango's rules turn out to be linear in this encoding:
 
-An `=` clue between two cells says they match, so they sum to 0. An `×` says they
+A `=` clue between two cells says they match, so they sum to 0. A `×` says they
 differ, so they sum to 1. Each clue is one equation.
 
 Three moons per row is an *odd* count, so all six cells in any row XOR to 1. Same for
 every column. That's 12 more equations for free, and I think this is the part most
 people miss when they play, because "exactly three" feels like a counting rule rather
-than a parity one.
-
-A revealed cell is just `x_i = value`.
+than a parity one. A revealed cell is just `x_i = value`.
 
 Stack all of that into one system `Ax = b` over F₂. A is the incidence matrix of rules
 against cells: columns are the 36 cells, rows are constraints, and `A[i][j] = 1` when
@@ -107,15 +109,17 @@ all look identical to them. "Exactly three" is strictly stronger than "odd."
 
 ### No three in a row: 
 That's a disjunction, not an equation. It carves an arbitrary subset
-out of the space rather than a subspace.
+out of the space rather than a properly contained subspace.
 
 So phase 1 hands you a reduced affine subspace and phase 2 has to search it. Which,
 satisfyingly, had to be the case since the generalized puzzle is NP-complete (De Biasi 2012),
 so if Gaussian elimination alone finished the job we'd have a poly-time algorithm for an
 NP-complete problem.
 
-The actual algorithm is therefore: build `[A | b]`, RREF it, bail on `0 = 1`, read off
-the pinned cells, then backtrack over whatever's left using the two rules the linear
+The actual algorithm is therefore: 
+1. build `[A | b]'
+2. RREF it, impossible puzzle if `0 = 1`
+4. read off the pinned cells, then backtrack over whatever's left using the two rules the linear
 layer is blind to.
 
 You can watch phase 1 do real work as clues accumulate. Holding one given fixed, at 10
@@ -132,7 +136,7 @@ which is why the reference implementation packs each row into a single int.
 
 ## related works (none of this is new)
 
-Background research for this project toldtn me that these rules are well established, they just live in three
+Background research for this project showed that these rules are well established, they just live in three
 literatures that mostly don't cite each other.
 
 Tango is basically a Takuzu / Binairo variant, with pair clues added and runs of two
@@ -157,7 +161,9 @@ What I couldn't find was anyone doing the F₂ parity analysis for this specific
 Published Takuzu solvers use SAT/ASP encodings or rule-based propagation. So the
 rank-11 result and the 5×5 border picture probably aren't written down anywhere for
 Tango, but that makes this a competent application of a known template to a case nobody
-bothered with, not a research contribution.
+bothered with.
+
+Anyways, have fun with it.
 
 ## todo
 
