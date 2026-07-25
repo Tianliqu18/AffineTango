@@ -21,9 +21,7 @@ inlines `src/core/*.js` into it. `src/core/` stays the only source of truth.
 ## the idea
 
 Encode sun = 0 and moon = 1. Now a board is just a vector in F₂³⁶ (36 cells, each a
-bit) and F₂ is the field where 1 + 1 = 0, so addition is XOR. Every time I say
-"even/odd" below I mean F₂, they're the same thing.
-
+bit) and F₂ is the field where 1 + 1 = 0, so addition is XOR. 
 Three of Tango's rules turn out to be linear in this encoding:
 
 An `=` clue between two cells says they match, so they sum to 0. An `×` says they
@@ -32,8 +30,7 @@ differ, so they sum to 1. Each clue is one equation.
 Three moons per row is an *odd* count, so all six cells in any row XOR to 1. Same for
 every column. That's 12 more equations for free, and I think this is the part most
 people miss when they play, because "exactly three" feels like a counting rule rather
-than a parity one. Its parity shadow is linear and the parity shadow is where all the
-leverage is.
+than a parity one.
 
 A revealed cell is just `x_i = value`.
 
@@ -100,18 +97,20 @@ component collapses to one free bit, since fixing any cell determines the rest a
 paths. A forest is always consistent. The only way to fail is a cycle whose labels sum
 to 1, which says a cell differs from itself.)
 
-## where it stops
+## where the linearity stops
 
 Two rules can't be written as `aᵀx = b` and so can't be eliminated.
 
-Exact cardinality: the parity equations only see weight mod 2, so weights 1, 3, and 5
+### Exact cardinality: 
+The parity equations only see mod 2, so weights 1, 3, and 5
 all look identical to them. "Exactly three" is strictly stronger than "odd."
 
-No three in a row: that's a disjunction, not an equation. It carves an arbitrary subset
+### No three in a row: 
+That's a disjunction, not an equation. It carves an arbitrary subset
 out of the space rather than a subspace.
 
 So phase 1 hands you a reduced affine subspace and phase 2 has to search it. Which,
-satisfyingly, had to be the case: the generalized puzzle is NP-complete (De Biasi 2012),
+satisfyingly, had to be the case since the generalized puzzle is NP-complete (De Biasi 2012),
 so if Gaussian elimination alone finished the job we'd have a poly-time algorithm for an
 NP-complete problem.
 
@@ -131,9 +130,9 @@ silently truncates and you get a solver that's confidently wrong. Use BigInt, tw
 32-bit words, or a byte array per row. In Python the arbitrary-precision ints just work,
 which is why the reference implementation packs each row into a single int.
 
-## prior art (i.e. none of this is new)
+## related works (none of this is new)
 
-I went looking and the ingredients are all well established, they just live in three
+Background research for this project toldtn me that these rules are well established, they just live in three
 literatures that mostly don't cite each other.
 
 Tango is basically a Takuzu / Binairo variant, with pair clues added and runs of two
