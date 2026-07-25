@@ -4,11 +4,17 @@ Solving LinkedIn's Tango puzzle with linear algebra over F₂, plus a Chrome ext
 that animates the whole thing so you can watch cells get determined by constraints
 that never touched them.
 
-What's here so far: the solver core in JS (`src/core/`), a Python reference
+~~What's here so far: the solver core in JS (`src/core/`), a Python reference
 implementation used only for cross-validation (`test/reference_solver.py`), and a
 standalone harness page that animates the whole elimination. The extension itself is
-next.
+next.~~
 
+The repo is now ready to be loaded as an unpacked chrome extension:
+### load as unpacked extension
+1. go to chrome://extensions
+2. toggle Developer mode (top right)
+3. Load unpacked → select the extension/ folder
+### Solving methodology checker
 ```
 python3 test/gen_cases.py && node test/crossvalidate.js   # 1685 cases vs the reference
 node tools/build-harness.js                               # regenerate harness.html
@@ -18,24 +24,23 @@ open harness.html                                         # watch it run
 The harness is self-contained on purpose (no server, no bundler), so the build step
 inlines `src/core/*.js` into it. `src/core/` stays the only source of truth.
 
-## the idea
+## the idea/motivation
+
+I was bummed out my senior spring semester since I could not fit Dylan Thurston's game elective class into my schedule.
+In the same semester, I was introduced to Linkedin games, which I got instantly hooked on. 
+This gave me inspiration for finding a formal mathematical connection between tango, linear algebra, and affine geometry (shoutout mark).
 
 Encode sun = 0 and moon = 1. Now a board is just a vector in F₂³⁶ (36 cells, each a
-bit) and F₂ is the field where 1 + 1 = 0, so addition is XOR. Every time I say
-"even/odd" below I mean F₂, they're the same thing.
-
+bit) and F₂ is the field where 1 + 1 = 0, so addition is XOR. 
 Three of Tango's rules turn out to be linear in this encoding:
 
-An `=` clue between two cells says they match, so they sum to 0. An `×` says they
+A `=` clue between two cells says they match, so they sum to 0. A `×` says they
 differ, so they sum to 1. Each clue is one equation.
 
 Three moons per row is an *odd* count, so all six cells in any row XOR to 1. Same for
 every column. That's 12 more equations for free, and I think this is the part most
 people miss when they play, because "exactly three" feels like a counting rule rather
-than a parity one. Its parity shadow is linear and the parity shadow is where all the
-leverage is.
-
-A revealed cell is just `x_i = value`.
+than a parity one. A revealed cell is just `x_i = value`.
 
 Stack all of that into one system `Ax = b` over F₂. A is the incidence matrix of rules
 against cells: columns are the 36 cells, rows are constraints, and `A[i][j] = 1` when
@@ -82,41 +87,43 @@ itself:
 Each R is forced because its row already has five knowns and has to come out odd. Each
 C likewise down its column. The corner gets computed two ways, along row 6 and down
 column 6, and both come out to the total parity of your free 5×5 block, so they agree
-automatically. That automatic agreement *is* the rank-11 dependency showing up in the
+automatically. That automatic agreement is the rank-11 dependency showing up in the
 flesh. If the rank had been a full 12 the corner would be facing two genuinely
-independent demands and could contradict itself.
-
-So "all rows odd, all columns odd" is just "free 5×5 plus a border that writes itself."
-That's the starting position before you read a single clue.
+independent demands and could contradict itself. Before a single clue is given, 
+the game boils down to deciding that free 5x5.
 
 **The linear layer invents clues you were never given.** Say a row is `a b c d e f`,
 with the row parity `a⊕b⊕c⊕d⊕e⊕f = 1`, plus clues `a = b` and `c × d`. Substituting
 `a⊕b = 0` and `c⊕d = 1` leaves `e⊕f = 0`, so e = f. Nobody gave you a clue about e and
 f. The linear span of your equations is full of statements like that and Gaussian
-elimination is just the machine that surfaces all of them at once.
+elimination reveals all of them at once.
 
 (Side note on the clue graph: label edges 0 for `=` and 1 for `×`, and each connected
 component collapses to one free bit, since fixing any cell determines the rest along
 paths. A forest is always consistent. The only way to fail is a cycle whose labels sum
 to 1, which says a cell differs from itself.)
 
-## where it stops
+## where the linearity stops
 
 Two rules can't be written as `aᵀx = b` and so can't be eliminated.
 
-Exact cardinality: the parity equations only see weight mod 2, so weights 1, 3, and 5
+### Exact cardinality: 
+The parity equations only see mod 2, so weights 1, 3, and 5
 all look identical to them. "Exactly three" is strictly stronger than "odd."
 
-No three in a row: that's a disjunction, not an equation. It carves an arbitrary subset
-out of the space rather than a subspace.
+### No three in a row: 
+That's a disjunction, not an equation. It carves an arbitrary subset
+out of the space rather than a properly contained subspace.
 
-So phase 1 hands you a reduced affine subspace and phase 2 has to search it. Which,
-satisfyingly, had to be the case: the generalized puzzle is NP-complete (De Biasi 2012),
-so if Gaussian elimination alone finished the job we'd have a poly-time algorithm for an
-NP-complete problem.
+So phase 1 hands you a reduced affine subspace and phase 2 has to search it. This had to
+be the case since the generalized puzzle is NP-complete (De Biasi 2012),
+so if Gaussian elimination alone finished the job we'd have a polynomial time algorithm for an
+NP-complete problem
 
-The actual algorithm is therefore: build `[A | b]`, RREF it, bail on `0 = 1`, read off
-the pinned cells, then backtrack over whatever's left using the two rules the linear
+The actual algorithm is therefore: 
+1. build `[A | b]'
+2. RREF it, impossible puzzle if `0 = 1`
+4. read off the pinned cells, then backtrack over whatever's left using the two rules the linear
 layer is blind to.
 
 You can watch phase 1 do real work as clues accumulate. Holding one given fixed, at 10
@@ -131,9 +138,9 @@ silently truncates and you get a solver that's confidently wrong. Use BigInt, tw
 32-bit words, or a byte array per row. In Python the arbitrary-precision ints just work,
 which is why the reference implementation packs each row into a single int.
 
-## prior art (i.e. none of this is new)
+## related works and existing literature (none of this is new)
 
-I went looking and the ingredients are all well established, they just live in three
+Background research for this project showed that these rules are well established, they just live in three
 literatures that mostly don't cite each other.
 
 Tango is basically a Takuzu / Binairo variant, with pair clues added and runs of two
@@ -158,7 +165,9 @@ What I couldn't find was anyone doing the F₂ parity analysis for this specific
 Published Takuzu solvers use SAT/ASP encodings or rule-based propagation. So the
 rank-11 result and the 5×5 border picture probably aren't written down anywhere for
 Tango, but that makes this a competent application of a known template to a case nobody
-bothered with, not a research contribution.
+bothered with.
+
+Anyways, have fun with it.
 
 ## todo
 
