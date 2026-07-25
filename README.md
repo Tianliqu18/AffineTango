@@ -22,7 +22,7 @@ inlines `src/core/*.js` into it. `src/core/` stays the only source of truth.
 
 I was bummed out my senior spring semester since I could not fit Dylan Thurston's game elective class into my schedule.
 In the same semester, I was introduced to Linkedin games, which I got instantly hooked on. 
-This gave me inspiration for finding a formal mathematical connection between tango and linear algebra.
+This gave me inspiration for finding a formal mathematical connection between tango, linear algebra, and affine geometry (shoutout mark).
 
 Encode sun = 0 and moon = 1. Now a board is just a vector in F₂³⁶ (36 cells, each a
 bit) and F₂ is the field where 1 + 1 = 0, so addition is XOR. 
@@ -81,18 +81,16 @@ itself:
 Each R is forced because its row already has five knowns and has to come out odd. Each
 C likewise down its column. The corner gets computed two ways, along row 6 and down
 column 6, and both come out to the total parity of your free 5×5 block, so they agree
-automatically. That automatic agreement *is* the rank-11 dependency showing up in the
+automatically. That automatic agreement is the rank-11 dependency showing up in the
 flesh. If the rank had been a full 12 the corner would be facing two genuinely
-independent demands and could contradict itself.
-
-So "all rows odd, all columns odd" is just "free 5×5 plus a border that writes itself."
-That's the starting position before you read a single clue.
+independent demands and could contradict itself. Before a single clue is given, 
+the game boils down to deciding that free 5x5.
 
 **The linear layer invents clues you were never given.** Say a row is `a b c d e f`,
 with the row parity `a⊕b⊕c⊕d⊕e⊕f = 1`, plus clues `a = b` and `c × d`. Substituting
 `a⊕b = 0` and `c⊕d = 1` leaves `e⊕f = 0`, so e = f. Nobody gave you a clue about e and
 f. The linear span of your equations is full of statements like that and Gaussian
-elimination is just the machine that surfaces all of them at once.
+elimination reveals all of them at once.
 
 (Side note on the clue graph: label edges 0 for `=` and 1 for `×`, and each connected
 component collapses to one free bit, since fixing any cell determines the rest along
@@ -111,10 +109,10 @@ all look identical to them. "Exactly three" is strictly stronger than "odd."
 That's a disjunction, not an equation. It carves an arbitrary subset
 out of the space rather than a properly contained subspace.
 
-So phase 1 hands you a reduced affine subspace and phase 2 has to search it. Which,
-satisfyingly, had to be the case since the generalized puzzle is NP-complete (De Biasi 2012),
-so if Gaussian elimination alone finished the job we'd have a poly-time algorithm for an
-NP-complete problem.
+So phase 1 hands you a reduced affine subspace and phase 2 has to search it. This had to
+be the case since the generalized puzzle is NP-complete (De Biasi 2012),
+so if Gaussian elimination alone finished the job we'd have a polynomial time algorithm for an
+NP-complete problem
 
 The actual algorithm is therefore: 
 1. build `[A | b]'
@@ -134,7 +132,7 @@ silently truncates and you get a solver that's confidently wrong. Use BigInt, tw
 32-bit words, or a byte array per row. In Python the arbitrary-precision ints just work,
 which is why the reference implementation packs each row into a single int.
 
-## related works (none of this is new)
+## related works and existing literature (none of this is new)
 
 Background research for this project showed that these rules are well established, they just live in three
 literatures that mostly don't cite each other.
