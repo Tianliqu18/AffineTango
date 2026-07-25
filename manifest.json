@@ -3,7 +3,10 @@
   "name": "Affine Tango",
   "version": "0.1.0",
   "description": "Solves LinkedIn's Tango puzzle live and animates the derivation.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "debugger"],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
   "host_permissions": [
     "https://8tango.com/*",
     "https://www.8tango.com/*",

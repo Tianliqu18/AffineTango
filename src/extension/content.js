@@ -103,6 +103,27 @@ async function run() {
 
     (async () => {
       const { board, grid, solution } = latest;
+
+      // LinkedIn's board ignores untrusted content-script clicks, so its
+      // adapter exposes a batched, debugger-driven write path instead of
+      // the plain per-cell writeCell 8tango uses.
+      if (board.writeCellsTrusted) {
+        const cells = [];
+        for (let y = 0; y < 6; y++) {
+          for (let x = 0; x < 6; x++) {
+            if (grid[y][x] !== UNKNOWN) continue;
+            cells.push({ index: y * 6 + x, value: solution[y][x] });
+          }
+        }
+        try {
+          const filled = await board.writeCellsTrusted(cells);
+          sendResponse({ ok: true, filled });
+        } catch (err) {
+          sendResponse({ ok: false, reason: String(err?.message ?? err) });
+        }
+        return;
+      }
+
       let filled = 0;
       for (let y = 0; y < 6; y++) {
         for (let x = 0; x < 6; x++) {

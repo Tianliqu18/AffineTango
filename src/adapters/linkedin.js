@@ -22,12 +22,26 @@
  *         Same geometry trick as 8tango's modifiers: nearest two cell
  *         centers to the marker's own bounding-rect center.
  *
- * writeCell is UNVERIFIED. Today's puzzle was already complete when this was
- * written (LinkedIn only drops one puzzle per day), so there was no blank
- * cell left to click. Cells have role="button" and tabindex="-1"; .click()
- * cycling blank -> sun -> moon -> blank is a guess based on how 8tango's
- * cells behave, not confirmed here. Check against tomorrow's fresh puzzle
- * before relying on this for autofill.
+ * Writes: unlike 8tango, LinkedIn's board ignores untrusted clicks outright.
+ * Confirmed live against a fresh blank puzzle: neither cell.click() nor a
+ * full synthetic pointerdown/mousedown/pointerup/mouseup/click sequence
+ * (correct target, correct coordinates) changed a cell's state at all. A
+ * genuine OS-level click did, immediately, going blank -> Sun.
+ *
+ * Left click places Sun, right click places Moon -- both directly, from
+ * blank, no left-click cycling through Sun first. (User-reported and taken
+ * on trust; a scripted right-click didn't register in the sandboxed test
+ * environment used to verify the rest of this, but that's more likely a gap
+ * in that particular test tool's right-click implementation than evidence
+ * against it -- chrome.debugger's Input.dispatchMouseEvent with button:
+ * 'right' is the standard way automation tools trigger a real contextmenu
+ * event, and is what writeCellsTrusted below actually uses in the shipped
+ * extension.)
+ *
+ * Since a content script can't produce a trusted click, writeCellsTrusted
+ * below hands the (index, value) pairs to the background service worker,
+ * which drives chrome.debugger's Input.dispatchMouseEvent instead -- see
+ * src/extension/background.js.
  */
 
 import { NV, SUN, MOON, UNKNOWN } from '../core/encode.js';
@@ -98,13 +112,27 @@ export async function readBoard() {
       const cell = cellElement(index);
       return !!cell && cellValue(cell) !== UNKNOWN;
     },
-    writeCell(index, value) {
-      const cell = cellElement(index);
-      if (!cell) return;
-      const current = cellValue(cell);
-      const order = [UNKNOWN, SUN, MOON];
-      const clicks = (order.indexOf(value) - order.indexOf(current) + 3) % 3;
-      for (let i = 0; i < clicks; i++) cell.click();
+    // fills is [{ index, value }]; every index passed in is assumed blank
+    // (content.js only ever calls this for cells still reading UNKNOWN).
+    // Left click places Sun directly; right click places Moon directly --
+    // one click per cell either way, no left-click cycling needed.
+    writeCellsTrusted(fills) {
+      const points = fills.flatMap(({ index, value }) => {
+        const cell = cellElement(index);
+        if (!cell) return [];
+        const r = cell.getBoundingClientRect();
+        const button = value === SUN ? 'left' : 'right';
+        return [{ x: r.left + r.width / 2, y: r.top + r.height / 2, button }];
+      });
+      return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: 'DEBUGGER_CLICK_BATCH', points }, (response) => {
+          if (chrome.runtime.lastError || !response?.ok) {
+            reject(new Error(response?.reason ?? chrome.runtime.lastError?.message ?? 'debugger click batch failed'));
+          } else {
+            resolve(fills.length);
+          }
+        });
+      });
     },
   };
 }

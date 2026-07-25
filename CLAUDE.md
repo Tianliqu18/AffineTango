@@ -313,15 +313,32 @@ never automatic -- CLAUDE.md already flagged that LinkedIn tracks streaks, so si
 changing what a player actually solved themselves would be the wrong default even though
 a button push isn't literally a persistent "toggle."
 
+LinkedIn's board ignores untrusted clicks (see the LinkedIn section below), so its adapter
+returns `writeCellsTrusted` instead of `writeCell`; `content.js`'s `AUTO_SOLVE` handler
+branches on which one the adapter exposes. The trusted path goes through
+`chrome.runtime.sendMessage({type: 'DEBUGGER_CLICK_BATCH', points})` to
+`src/extension/background.js`, a service worker (added for this reason -- there wasn't
+one before) that drives `chrome.debugger`'s `Input.dispatchMouseEvent`. Attaching shows
+Chrome's persistent "started debugging this browser" banner on the tab; the background
+script attaches right before a fill batch and detaches immediately after rather than
+holding it open. This needed the `debugger` permission added to `manifest.json`.
+
 ## Remaining work
 
 - [x] M3: `manifest.json`, content script, bundle step, adapter for `8tango.com`
       (read and write both verified live)
 - [x] M3: adapter for `linkedin.com/games/tango` -- read side verified against a
       completed puzzle (givens + clues reproduce the actual board exactly as the
-      solver's unique solution). `writeCell` is unverified: today's puzzle was
-      already complete, so there was no blank cell to click. LinkedIn only drops
-      one puzzle a day; confirm the click-cycle behavior against tomorrow's.
+      solver's unique solution).
+- [x] M3.5: LinkedIn writes -- confirmed live against a fresh blank puzzle that
+      untrusted clicks (`cell.click()`, and a full synthetic pointerdown/mousedown/
+      pointerup/mouseup/click sequence) do nothing there, unlike 8tango. Replaced the
+      guessed `writeCell` with `writeCellsTrusted`, routed through a new background
+      service worker driving `chrome.debugger` for OS-trusted clicks. Confirmed working
+      end-to-end on a real multi-cell fill. Also switched from left-click cycling
+      (blank -> sun -> moon) to placing the value directly: left click -> Sun, right
+      click -> Moon, one click per cell either way -- user-reported from real play,
+      halves the click count (and therefore fill time) versus the cycling approach.
 - [x] M3: read-only overlay on the live board
 - [x] M4: autofill, gated behind an explicit popup button ("Auto-solve") rather
       than a persistent toggle -- never runs on its own, same "off by default"
