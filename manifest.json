@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Tango Lens",
+  "name": "Affine Tango",
   "version": "0.1.0",
   "description": "Solves LinkedIn's Tango puzzle live and animates the derivation.",
   "content_scripts": [
