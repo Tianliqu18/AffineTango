@@ -25,7 +25,7 @@ jobs:
       # popup.html) reference at the same relative paths: dist/ for the built
       # bundles, src/extension/{popup.html,popup.js} unbundled.
       - name: Package unpacked extension
-        run: zip -r affine-tango-extension.zip manifest.json dist src/extension/popup.html src/extension/popup.js
+        run: zip -r affine-tango-extension.zip manifest.json dist icons src/extension/popup.html src/extension/popup.js
 
       - name: Publish rolling "latest" release
         uses: softprops/action-gh-release@v2

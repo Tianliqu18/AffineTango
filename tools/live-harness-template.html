@@ -6,26 +6,44 @@
 <title>Affine Tango / live derivation</title>
 <style>
 :root{
-  --card:#DDD8C6;
-  --card-edge:#C3BDA8;
-  --ground:#ADA894;
-  --ink:#191D1A;
-  --ink-soft:#5A5F55;
-  --ink-faint:#8A8F82;
-  --hole:#262E28;
-  --pivot:#8C2F26;
-  --pin:#1D5A4E;
-  --guess:#A8730F;
-  --sun:#E4C77C;
-  --moon:#2E3A33;
+  --card:#F1F5FB;
+  --card-edge:#DCE6F5;
+  --ground:#FFFFFF;
+  --ink:#12172A;
+  --ink-soft:#47536A;
+  --ink-faint:#8793A8;
+  --hole:var(--ink);
+  --pivot:#D97706;
+  --pin:#1D4ED8;
+  --guess:#60A5FA;
+  --sun:#F5C518;
+  --moon:#2A3F8F;
 
-  --blk-row:#3C6E8F;
-  --blk-col:#5B7C6B;
-  --blk-clue:#8C6239;
-  --blk-given:#6B4C7A;
+  --blk-row:#0369A1;
+  --blk-col:#0EA5E9;
+  --blk-clue:#4338CA;
+  --blk-given:#2A4C94;
 
   --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",Helvetica,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --card:#2A2C30;
+    --card-edge:#3D4046;
+    --ground:#1E1F22;
+    --ink:#F2F4F8;
+    --ink-soft:#B7BEC9;
+    --ink-faint:#7C8390;
+    --pivot:#D97706;
+    --pin:#4C7DFF;
+    --guess:#4589E8;
+
+    --blk-row:#0C6FA8;
+    --blk-col:#1499C4;
+    --blk-clue:#5A4FE0;
+    --blk-given:#4F72C7;
+  }
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -61,7 +79,7 @@ select,button{
   border:1px solid var(--card-edge);border-bottom-width:2px;
   padding:7px 11px;cursor:pointer;border-radius:2px;
 }
-button:hover,select:hover{background:#E6E2D2}
+button:hover,select:hover{background:#E3ECFA}
 button:active{border-bottom-width:1px;transform:translateY(1px)}
 button[disabled]{opacity:.4;cursor:default;transform:none}
 :focus-visible{outline:2px solid var(--pivot);outline-offset:2px}
@@ -101,15 +119,15 @@ button[disabled]{opacity:.4;cursor:default;transform:none}
   color:var(--ink-faint);
   transition:background .16s ease,border-color .16s ease,color .16s ease;
 }
-.cell.sun{background:var(--sun);color:#6B5416}
-.cell.moon{background:var(--moon);color:#A9B5A9}
+.cell.sun{background:var(--sun);color:#3D2B00}
+.cell.moon{background:var(--moon);color:#E4EAFF}
 .cell.given{border-color:var(--ink)}
 .cell.pinned{border-color:var(--pin)}
 .cell.guessed{border-color:var(--guess);border-style:dashed}
 .cell.flash{animation:pop .5s ease}
 @keyframes pop{
-  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(29,90,78,.55)}
-  40%{transform:scale(1.14);box-shadow:0 0 0 9px rgba(29,90,78,0)}
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(29,78,216,.55)}
+  40%{transform:scale(1.14);box-shadow:0 0 0 9px rgba(29,78,216,0)}
   100%{transform:scale(1)}
 }
 .cell.rejected{animation:shake .3s ease}
@@ -167,15 +185,15 @@ button[disabled]{opacity:.4;cursor:default;transform:none}
 .bit.on::after{background:var(--hole);inset:2px 2px}
 .bit.gutter{margin-left:9px;border-left:1px solid var(--card-edge)}
 .bit.rhs::after{border-radius:50%}
-.bit.pivcol::before{content:"";position:absolute;inset:0;background:rgba(140,47,38,.10)}
-.mrow.pivrow .bit::before{content:"";position:absolute;inset:0;background:rgba(140,47,38,.08)}
-.bit.piv::after{background:var(--pivot);inset:1px 1px;box-shadow:0 0 0 2px rgba(140,47,38,.3)}
+.bit.pivcol::before{content:"";position:absolute;inset:0;background:rgba(217,119,6,.10)}
+.mrow.pivrow .bit::before{content:"";position:absolute;inset:0;background:rgba(217,119,6,.08)}
+.bit.piv::after{background:var(--pivot);inset:1px 1px;box-shadow:0 0 0 2px rgba(217,119,6,.3)}
 .mrow.xsource .bit.on::after{background:var(--pivot)}
 .mrow.xtarget{animation:sweep .22s ease}
-@keyframes sweep{0%{background:rgba(140,47,38,.22)}100%{background:transparent}}
-.mrow.cited{background:rgba(140,47,38,.14)}
+@keyframes sweep{0%{background:rgba(217,119,6,.22)}100%{background:transparent}}
+.mrow.cited{background:rgba(217,119,6,.14)}
 .mrow.cited .bit.on::after{background:var(--pivot)}
-.mrow.conflict{background:rgba(140,47,38,.3)}
+.mrow.conflict{background:rgba(217,119,6,.3)}
 .mrow.pinrow .bit.on::after{background:var(--pin)}
 
 .cardfoot{
@@ -202,7 +220,7 @@ button[disabled]{opacity:.4;cursor:default;transform:none}
 .narrate.pin{border-left-color:var(--pin)}
 .narrate.pivot{border-left-color:var(--pivot)}
 .narrate.search{border-left-color:var(--guess)}
-.narrate.bad{border-left-color:var(--pivot);background:rgba(140,47,38,.10)}
+.narrate.bad{border-left-color:var(--pivot);background:rgba(217,119,6,.10)}
 
 .empty{
   font-family:var(--mono);font-size:13px;color:var(--ink-soft);
